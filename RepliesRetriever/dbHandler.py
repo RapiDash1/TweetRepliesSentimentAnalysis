@@ -1,21 +1,24 @@
 import pymongo
 from tweetReplies import TweetReplies
+import sys
+sys.path.insert(0, "../RepliesAnalyser/")
+from tweetAnalysis import TweetAnalysis
 
 class DbHandler:
     def __init__(self):
         dbClient = pymongo.MongoClient("mongodb://twitteradmin:adminpassword@localhost:27017/")
         self.db = dbClient["tweetanalysis"]
-        self.collection = self.db["replies"]
 
-    def add(self, tweetReplies: TweetReplies):
-        if not self.collection.find_one({"tweetId": tweetReplies.tweetId}):
-            self.collection.insert_one({
+    def addTweetReplies(self, tweetReplies: TweetReplies):
+        collection = self.db["replies"]
+        if not collection.find_one({"tweetId": tweetReplies.tweetId}):
+            collection.insert_one({
                 "tweetId": tweetReplies.tweetId,
                 "replies": tweetReplies.replies
             })
         else:
             for reply in tweetReplies.replies:
-                self.collection.update_one(
+                collection.update_one(
                 { "tweetId": tweetReplies.tweetId },
                 {
                     "$push": {
@@ -23,13 +26,22 @@ class DbHandler:
                     }
                 }
             )
+    
+    def addSentimentAnalysisForTweet(self, tweetAnalysis: TweetAnalysis):
+        print(tweetAnalysis.tweetId, tweetAnalysis.analysisScore)
+        collection = self.db["analysis"]
+        collection.insert_one({
+            "tweetId": tweetAnalysis.tweetId,
+            "analysis": tweetAnalysis.analysisScore
+        })
 
-    def get(self, tweetId):
-        return self.collection.find_one({"tweetId": tweetId})
+    def getRepliesForTweetId(self, tweetId):
+        collection = self.db["replies"]
+        return collection.find_one({"tweetId": tweetId})
 
     def _dropCollection(self):
-        self.collection = self.db["replies"]
-        self.collection.drop()
+        collection = self.db["replies"]
+        collection.drop()
 
 # [--Add replies example--]
 # dbHandler = DbHandler()
@@ -39,6 +51,6 @@ class DbHandler:
 # dbHandler.add(tweetReplies)
 # print(dbHandler.get("1"))
 
-# [--Drop Collection example--]
-dbHandler = DbHandler()
-dbHandler._dropCollection()
+# # [--Drop Collection example--]
+# dbHandler = DbHandler()
+# dbHandler._dropCollection()

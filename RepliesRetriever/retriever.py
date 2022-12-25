@@ -3,6 +3,7 @@ from dbHandler import DbHandler
 from tweetReplies import TweetReplies
 from envHandler import EnvHandler
 import requests
+from kafkaHandler import KafkaHandler
 
 class Retriever:
 
@@ -37,7 +38,7 @@ class Retriever:
         nextToken = None
 
         i = 0
-        while i < 2:
+        while i < 10:
             searchResults = requests.get(
                 "https://api.twitter.com/2/tweets/search/recent",
                 params={
@@ -54,7 +55,10 @@ class Retriever:
             i += 1
 
         dbHandler = DbHandler()
-        dbHandler.add(TweetReplies(latestTweetId, replies)) 
+        dbHandler.addTweetReplies(TweetReplies(latestTweetId, replies)) 
+
+        kafkaHandler = KafkaHandler()
+        kafkaHandler.addTweetIdToTopic(latestTweetId)
 
     
 if __name__ == "__main__":
