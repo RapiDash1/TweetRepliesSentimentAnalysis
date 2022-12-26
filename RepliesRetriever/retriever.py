@@ -42,14 +42,17 @@ class Retriever:
             searchResults = requests.get(
                 "https://api.twitter.com/2/tweets/search/recent",
                 params={
-                    "query": f"to:elonmusk",
-                    "max_results": 10,
+                    "query": f"to:elonmusk in_reply_to_tweet_id:{latestTweetId}",
+                    "max_results": 100,
                     "next_token": nextToken,
                 },
                 headers={"Authorization": f"Bearer {token['access_token']}"},
             ).json()
 
             replies.extend(searchResults["data"])
+
+            if "next_token" not in searchResults["meta"]:
+                break
 
             nextToken = searchResults["meta"]["next_token"]
             i += 1
