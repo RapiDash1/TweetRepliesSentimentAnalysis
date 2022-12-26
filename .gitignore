@@ -1,2 +1,6 @@
 *pycache*
 env.json
+venv
+vev
+__pycache__
+.DS_Store
